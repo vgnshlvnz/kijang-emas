@@ -1,51 +1,32 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "kijang-emas-demo",
-	"main": "src/index.ts",
-	"compatibility_date": "2026-10-01",
-	"observability": {
-		"enabled": true
-	},
-	// Static page in /public; /api/* falls through to the Worker.
-	"assets": {
-		"directory": "./public",
-		"binding": "ASSETS"
-	},
-	// Caches BNM responses and agent answers.
-	// Create it once:  npx wrangler kv namespace create CACHE
-	// then paste the printed id here.
-	"kv_namespaces": [
-		{
-			"binding": "CACHE",
-			"id": "68dc6be6de4249859061509d9b1f7fce"
-		}
-	],
-	// Non-secret settings. The API key is a secret (LLM_API_KEY), never put it here.
-	// Leave LLM_MODEL empty to run the page without an LLM (answers are computed directly).
-	"vars": {
-		"LLM_BASE_URL": "https://integrate.api.nvidia.com/v1",
-		"LLM_MODEL": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
-	},
-	// Staging: deployed from PRs by CI. Bindings and vars are NOT inherited, so they are repeated.
-	"env": {
-		"staging": {
-			"name": "kijang-emas-demo-staging",
-			"assets": {
-				"directory": "./public",
-				"binding": "ASSETS"
-			},
-			// Separate namespace so staging never touches the production cache.
-			// Paste the id of the staging CACHE namespace here (see PR description).
-			"kv_namespaces": [
-				{
-					"binding": "CACHE",
-					"id": "35f17cb8b24549f9b69498a6969c50d2"
-				}
-			],
-			"vars": {
-				"LLM_BASE_URL": "https://integrate.api.nvidia.com/v1",
-				"LLM_MODEL": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
-			}
-		}
-	}
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kijang-emas-demo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+
+  // Static page in /public; /api/* falls through to the Worker.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // Caches BNM responses and agent answers.
+  // Create it once:  npx wrangler kv namespace create CACHE
+  // then paste the printed id here.
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "REPLACE_WITH_KV_NAMESPACE_ID" }
+  ],
+
+  // Non-secret settings. The API key is a secret (LLM_API_KEY), never put it here.
+  // Leave LLM_MODEL empty to run the page without an LLM (answers are computed directly).
+  "vars": {
+    "LLM_BASE_URL": "https://integrate.api.nvidia.com/v1",
+    "LLM_MODEL": "",
+    // Reasoning models think before answering; give them room.
+    "LLM_MAX_TOKENS": "4096",
+    // Optional JSON added to every LLM request. Examples:
+    //   vLLM / many NIM reasoning models: {"chat_template_kwargs":{"enable_thinking":false}}
+    "LLM_EXTRA_BODY": ""
+  }
 }

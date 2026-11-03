@@ -179,21 +179,39 @@ export async function runAgent(env: Env, question: string): Promise<{ answer: st
   const tools = Object.values(TOOLS).map((t) => ({ type: "function", function: t.schema }));
   const messages: any[] = [{ role: "system", content: SYSTEM }, { role: "user", content: question }];
   const trace: TraceStep[] = [];
+  const maxTokens = Number(env.LLM_MAX_TOKENS) || 4096;
+  let extra: Record<string, unknown> = {};
+  try { extra = env.LLM_EXTRA_BODY ? JSON.parse(env.LLM_EXTRA_BODY) : {}; }
+  catch { throw new Error("LLM_EXTRA_BODY is not valid JSON"); }
+  let nudged = false;
 
   for (let step = 0; step < MAX_STEPS; step++) {
     const r = await fetch(`${base}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${env.LLM_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages, tools, tool_choice: "auto", temperature: 0, max_tokens: 1200 }),
+      body: JSON.stringify({ model, messages, tools, tool_choice: "auto", temperature: 0, max_tokens: maxTokens, ...extra }),
     });
     if (!r.ok) throw new Error(`LLM HTTP ${r.status}: ${(await r.text()).slice(0, 160)}`);
-    const msg = (await r.json<any>()).choices?.[0]?.message;
+    const choice = (await r.json<any>()).choices?.[0];
+    const msg = choice?.message;
     if (!msg) throw new Error("LLM returned no message");
 
     if (!msg.tool_calls?.length) {
       const answer = clean(msg.content);
-      if (!answer) throw new Error("LLM returned an empty answer");
-      return { answer, trace };
+      if (answer) return { answer, trace };
+
+      // Empty reply: say why, and give the model one more chance to answer.
+      const finish = choice.finish_reason ?? "unknown";
+      const thought = Boolean(msg.reasoning_content || msg.reasoning);
+      if (finish === "length")
+        throw new Error(`model ran out of tokens (max_tokens=${maxTokens}); raise LLM_MAX_TOKENS or turn thinking off via LLM_EXTRA_BODY`);
+      if (nudged)
+        throw new Error(`LLM returned an empty answer twice (finish_reason=${finish}${thought ? ", only reasoning text" : ""})`);
+      nudged = true;
+      trace.push({ tool: "(empty reply)", args: { finish_reason: finish }, result: "asked the model for its final answer" });
+      messages.push({ role: "assistant", content: "" },
+                    { role: "user", content: "Give your final answer now, in plain text, using the tool results above." });
+      continue;
     }
 
     messages.push({ role: "assistant", content: msg.content ?? "", tool_calls: msg.tool_calls });

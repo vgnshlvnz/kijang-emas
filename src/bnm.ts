@@ -8,6 +8,10 @@ export interface Env {
   LLM_API_KEY?: string;
   LLM_BASE_URL?: string;
   LLM_MODEL?: string;
+  /** Token budget per LLM call. Reasoning models need room to think. Default 4096. */
+  LLM_MAX_TOKENS?: string;
+  /** Optional JSON merged into each request, e.g. {"chat_template_kwargs":{"enable_thinking":false}} */
+  LLM_EXTRA_BODY?: string;
 }
 
 export interface Price { buying: number; selling: number }
