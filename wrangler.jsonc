@@ -1,0 +1,29 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "kijang-emas-demo",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"observability": {
+		"enabled": true
+	},
+	// Static page in /public; /api/* falls through to the Worker.
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	// Caches BNM responses and agent answers.
+	// Create it once:  npx wrangler kv namespace create CACHE
+	// then paste the printed id here.
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "68dc6be6de4249859061509d9b1f7fce"
+		}
+	],
+	// Non-secret settings. The API key is a secret (LLM_API_KEY), never put it here.
+	// Leave LLM_MODEL empty to run the page without an LLM (answers are computed directly).
+	"vars": {
+		"LLM_BASE_URL": "https://integrate.api.nvidia.com/v1",
+		"LLM_MODEL": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+	}
+}

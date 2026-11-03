@@ -1,0 +1,4 @@
+# Copy to .dev.vars for `npm run dev`. Never commit .dev.vars.
+LLM_API_KEY=nvapi-xxxxxxxx
+LLM_MODEL=<a model id that find_models.py marked TOOLS OK>
+# LLM_BASE_URL=http://<your-vllm-host>:8000/v1
