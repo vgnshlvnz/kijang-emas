@@ -1,12 +1,14 @@
 name: Deploy
 
 on:
+  pull_request:
+    branches: [master, main]
   push:
     branches: [master, main]
   workflow_dispatch:
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +19,42 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+
+  deploy-staging:
+    # PRs from this repo only: fork PRs don't get secrets.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy to staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          environment: staging
+          secrets: |
+            LLM_API_KEY
+          command: deploy --env staging
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+
+  deploy-production:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
