@@ -39,7 +39,7 @@
 			"kv_namespaces": [
 				{
 					"binding": "CACHE",
-					"id": "REPLACE_WITH_STAGING_KV_ID"
+					"id": "35f17cb8b24549f9b69498a6969c50d2"
 				}
 			],
 			"vars": {
