@@ -25,5 +25,27 @@
 	"vars": {
 		"LLM_BASE_URL": "https://integrate.api.nvidia.com/v1",
 		"LLM_MODEL": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+	},
+	// Staging: deployed from PRs by CI. Bindings and vars are NOT inherited, so they are repeated.
+	"env": {
+		"staging": {
+			"name": "kijang-emas-demo-staging",
+			"assets": {
+				"directory": "./public",
+				"binding": "ASSETS"
+			},
+			// Separate namespace so staging never touches the production cache.
+			// Paste the id of the staging CACHE namespace here (see PR description).
+			"kv_namespaces": [
+				{
+					"binding": "CACHE",
+					"id": "REPLACE_WITH_STAGING_KV_ID"
+				}
+			],
+			"vars": {
+				"LLM_BASE_URL": "https://integrate.api.nvidia.com/v1",
+				"LLM_MODEL": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+			}
+		}
 	}
 }
